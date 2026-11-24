@@ -1,0 +1,11 @@
+# DNG + 6D 极分解 + Matformer 骨干（同时生成原子类型）
+defaults:
+  - flow_polar_w_type
+  - override decoder: matformer
+  - _self_
+
+decoder:
+  pred_type: true
+  smooth: true
+  lattice_dim: 6
+  ip: false

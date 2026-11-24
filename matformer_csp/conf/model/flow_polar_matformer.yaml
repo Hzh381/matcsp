@@ -1,0 +1,9 @@
+# CSP + 6D 极分解 + Matformer 骨干
+defaults:
+  - flow_polar
+  - override decoder: matformer
+  - _self_
+
+decoder:
+  lattice_dim: 6
+  ip: false

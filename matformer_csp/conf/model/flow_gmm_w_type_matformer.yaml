@@ -1,0 +1,11 @@
+# GMM 耦合流匹配（DNG）+ Matformer 骨干
+defaults:
+  - flow_gmm_w_type
+  - override decoder: matformer
+  - _self_
+
+decoder:
+  pred_type: true
+  smooth: true
+  lattice_dim: 6
+  ip: false
