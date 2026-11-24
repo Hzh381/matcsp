@@ -1,0 +1,16 @@
+# Matformer-CSP CPU 环境（conda 只装 Python + PyTorch，其余依赖用 pip 安装）
+# 用法：
+#   conda env create -f environment-cpu.yml
+#   conda activate matformer-csp-cpu
+#   python -m pip install -r requirements-csp.txt
+#   python -m pip install -r requirements-pyg-cpu.txt
+
+name: matformer-csp-cpu
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch=2.5.0
+  - cpuonly
+  - pip

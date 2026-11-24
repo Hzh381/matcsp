@@ -1,0 +1,20 @@
+# Matformer-CSP NVIDIA GPU 环境（CUDA 12.1）
+# 仅适用于 NVIDIA GPU；Intel Arc / AMD 不适用。
+# 需要 NVIDIA 驱动支持 CUDA 12.1（Windows 大约 >= 527.41）。
+#
+# 用法：
+#   conda env create -f environment-gpu.yml
+#   conda activate matformer-csp-gpu
+#   python -m pip install -r requirements-csp.txt
+#   python -m pip install -r requirements-pyg-gpu.txt
+
+name: matformer-csp-gpu
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch=2.5.0
+  - pytorch-cuda=12.1
+  - pip
