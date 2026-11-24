@@ -34,7 +34,6 @@ def main():
         "p_tqdm",
         "smact",
         "matminer",
-        "torchdyn",
     ]
     for name in modules:
         try:
