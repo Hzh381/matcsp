@@ -1,0 +1,38 @@
+# Matformer-CSP conda 环境（CPU/GPU 通用）。
+# GPU 用户可另加：conda install pytorch-cuda=12.1 -c nvidia
+# 或按 README 用 pip 安装对应 CUDA 版本的 torch。
+#
+# PyG 扩展（torch_scatter/torch_sparse/torch_cluster/torch_spline_conv）
+# 需要按 torch/CUDA 版本从 PyG wheel 源安装，见 README。
+
+name: matformer-csp
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch>=2.0
+  - lightning>=2.0
+  - hydra-core>=1.3
+  - omegaconf>=2.3
+  - python-dotenv
+  - pymatgen
+  - pathos
+  - matminer
+  - einops
+  - numpy
+  - scipy
+  - pandas
+  - scikit-learn
+  - networkx
+  - tqdm
+  - pip
+  - pip:
+      - torch_geometric>=2.4
+      - pyxtal
+      - p_tqdm
+      - smact
+      - chemparse
+      - torchdyn
+      - finetuning_scheduler

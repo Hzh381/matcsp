@@ -1,0 +1,17 @@
+# Matformer 放大版：128/5 欠拟合时使用（256 维、6 层）。
+_target_: matformer_csp.pl_modules.matformer_cspnet.MatformerCSPNet
+hidden_dim: 256
+latent_dim: 0
+lattice_dim: 9
+max_atoms: 100
+num_layers: 6
+heads: 4
+edge_rbf_bins: 128
+edge_style: knn
+max_neighbors: ${model.max_neighbors}
+cutoff: ${model.radius}
+ln: true
+ip: true
+pred_type: false
+pred_scalar: false
+smooth: false

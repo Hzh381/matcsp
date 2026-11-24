@@ -1,0 +1,15 @@
+# GMM 先验拟合超参数（Stage 0–2）
+K_max: 10               # 截断分量上限
+eps: 0.01               # 有效模式阈值（pi_c > eps）
+alpha: 0.1              # Dirichlet 先验浓度，<1 抑制无效分量
+group_samples: 4        # 置换/平移群平均的蒙特卡洛样本数 J
+joint_iters: 20         # 联合 EM 迭代次数
+wrapped_iters: 30       # 坐标 GMM 单独拟合的迭代次数
+sigma_prior: 0.001      # 方差先验
+min_sigma: 0.001
+max_sigma: 0.5
+seed: 0
+device: cuda            # 无 GPU 时自动回退 cpu
+max_fit_samples: null   # 非空时只用随机子集拟合，但仍为全部样本计算 resp
+max_atoms: null         # 非空时覆盖从数据统计的最大原子数
+out: cache/gmm/prior.pt

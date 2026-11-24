@@ -1,0 +1,18 @@
+# Matformer 解码器：默认按 Matformer 原论文规模（128 维、5 层、4 头），
+# 不照搬 CSPNet 的 512/6。容量不足时可改用 matformer_wide.yaml。
+_target_: matformer_csp.pl_modules.matformer_cspnet.MatformerCSPNet
+hidden_dim: 128
+latent_dim: 0
+lattice_dim: 9
+max_atoms: 100
+num_layers: 5
+heads: 4
+edge_rbf_bins: 128
+edge_style: knn
+max_neighbors: ${model.max_neighbors}
+cutoff: ${model.radius}
+ln: true
+ip: true
+pred_type: false
+pred_scalar: false
+smooth: false

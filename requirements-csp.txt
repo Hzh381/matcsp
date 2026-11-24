@@ -1,0 +1,30 @@
+# 可移植依赖（不固定 torch / PyG 扩展的 CPU/CUDA 版本）。
+#
+# 安装顺序建议：
+#   1) 按平台安装 torch（见 README）
+#   2) 安装 PyG 扩展（按 torch/CUDA 版本替换 URL）：
+#      pip install torch_scatter torch_sparse torch_cluster torch_spline_conv \
+#        -f https://data.pyg.org/whl/torch-<ver>+<cuda>.html
+#   3) pip install -r requirements-csp.txt
+
+torch_geometric>=2.4
+lightning>=2.0
+hydra-core>=1.3
+omegaconf>=2.3
+python-dotenv
+pymatgen
+pyxtal
+p_tqdm
+pathos
+smact
+matminer
+einops
+chemparse
+torchdyn
+finetuning_scheduler
+numpy
+scipy
+pandas
+scikit-learn
+networkx
+tqdm

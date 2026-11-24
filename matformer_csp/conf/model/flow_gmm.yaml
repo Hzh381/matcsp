@@ -1,0 +1,26 @@
+# GMM 耦合流匹配（CSP 版本，默认 CSPNet 解码器，便于与原实验对照）
+_target_: matformer_csp.pl_modules.flow_gmm.CSPFlowGMM
+time_dim: 256
+latent_dim: 0
+cost_type: 1.
+cost_coord: 10.
+cost_lattice: 1.
+max_neighbors: 20
+radius: 7.
+timesteps: 1000
+lattice_polar: true
+lattice_polar_sigma: 0.1
+gmm_prior_path: null
+
+defaults:
+  - decoder: cspnet
+  - beta_scheduler: cosine
+  - sigma_scheduler: wrapped
+  - conditions: default
+  - _self_
+
+decoder:
+  pred_type: false
+  smooth: ${model.decoder.pred_type}
+  lattice_dim: 6
+  ip: false
