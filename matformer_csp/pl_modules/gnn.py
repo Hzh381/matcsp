@@ -3,7 +3,7 @@
 
 import torch
 import torch.nn as nn
-from torch_scatter import scatter
+from matformer_csp.compat import scatter
 from torch_geometric.nn.inits import glorot_orthogonal
 from torch_geometric.nn.models.dimenet import (
     BesselBasisLayer,
@@ -12,7 +12,10 @@ from torch_geometric.nn.models.dimenet import (
     SphericalBasisLayer,
 )
 from torch_geometric.nn.resolver import activation_resolver
-from torch_sparse import SparseTensor
+try:
+    from torch_sparse import SparseTensor
+except ImportError:  # 可选依赖；主 CSP 实验不需要
+    SparseTensor = None
 
 from matformer_csp.common.data_utils import (
     get_pbc_distances,
@@ -265,6 +268,8 @@ class DimeNetPlusPlus(torch.nn.Module):
         # row, col = col, row  # Swap because my definition of edge_index is i->j
 
         value = torch.arange(row.size(0), device=row.device)
+        if SparseTensor is None:
+            raise ImportError("gnn 模型需要 torch_sparse")
         adj_t = SparseTensor(row=col, col=row, value=value, sparse_sizes=(num_nodes, num_nodes))
         adj_t_row = adj_t[row]
         num_triplets = adj_t_row.set_value(None).sum(dim=1).to(torch.long)

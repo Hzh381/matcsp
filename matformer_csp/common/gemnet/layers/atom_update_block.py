@@ -8,7 +8,7 @@ This source code is licensed under the MIT license found at https://github.com/F
 from typing import Tuple
 
 import torch
-from torch_scatter import scatter
+from matformer_csp.compat import scatter
 
 from ..initializers import he_orthogonal_init
 from ..layers.base_layers import Dense, ResidualLayer

@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 # import numpy as np
 import torch
 import torch.nn as nn
-from torch_scatter import scatter
+from matformer_csp.compat import scatter
 
 from mattergen.common.data.types import PropertySourceId
 from mattergen.common.gemnet.gemnet import GemNetT, ModelOutput

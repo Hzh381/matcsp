@@ -1,7 +1,0 @@
-# PyG 扩展（NVIDIA CUDA 12.1），必须与 torch 版本完全一致。
-# 当前匹配 torch==2.5.0；换 torch 版本时同步修改 URL。
---find-links https://data.pyg.org/whl/torch-2.5.0+cu121.html
-torch_scatter
-torch_sparse
-torch_cluster
-torch_spline_conv

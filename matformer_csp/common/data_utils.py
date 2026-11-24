@@ -571,8 +571,8 @@ def repeat_blocks(
         sizes = [2,3,2] ; repeats = [2,0,2] ; continuous_indexing = True
         Return: [0 1 0 1  5 6 5 6]
     """
-    # 按需导入，避免 Matformer/fc 路径强依赖 torch_scatter
-    from torch_scatter import segment_csr
+    # 按需导入纯 PyTorch 兼容层
+    from matformer_csp.compat import segment_csr
 
     assert sizes.dim() == 1
     assert all(sizes >= 0)
@@ -683,7 +683,7 @@ def repeat_blocks(
 
 
 def radius_graph_pbc(pos, lengths, angles, natoms, radius, max_num_neighbors_threshold, device, lattices=None):
-    from torch_scatter import segment_coo, segment_csr
+    from matformer_csp.compat import segment_coo, segment_csr
 
     # device = pos.device
     batch_size = len(natoms)
@@ -873,7 +873,7 @@ def get_max_neighbors_mask(
     `max_num_neighbors_threshold` neighbors.
     Assumes that `index` is sorted.
     """
-    from torch_scatter import segment_coo, segment_csr
+    from matformer_csp.compat import segment_coo, segment_csr
 
     device = natoms.device
     num_atoms = natoms.sum()

@@ -1,4 +1,4 @@
-# 环境自检：打印 Python/torch/CUDA/PyG 扩展及关键依赖版本。
+# 环境自检：打印 Python/torch/CUDA/关键依赖版本，并验证 PyG 的 scatter 路径。
 #
 #   python matformer_csp/scripts/check_env.py
 
@@ -22,10 +22,6 @@ def main():
 
     modules = [
         "torch_geometric",
-        "torch_scatter",
-        "torch_sparse",
-        "torch_cluster",
-        "torch_spline_conv",
         "lightning",
         "hydra",
         "omegaconf",
@@ -47,13 +43,15 @@ def main():
         except Exception as e:
             print(f"{name}: MISSING ({type(e).__name__}: {e})")
 
-    # 真正调用一次 torch_scatter，确认 ABI 匹配（只 import 不够）
+    # 验证 PyG 的纯 PyTorch scatter 路径（项目不再依赖 torch_scatter）
     try:
-        from torch_scatter import scatter
+        from torch_geometric.utils import scatter
         x = scatter(torch.ones(3), torch.tensor([0, 0, 1]), dim=0, reduce="sum")
-        print(f"torch_scatter 调用: OK ({x.tolist()})")
+        print(f"PyG scatter 调用: OK ({x.tolist()})")
     except Exception as e:
-        print(f"torch_scatter 调用: FAILED ({type(e).__name__}: {e})")
+        print(f"PyG scatter 调用: FAILED ({type(e).__name__}: {e})")
+
+    print("提示: 主 CSP 实验不依赖 torch_scatter/torch_sparse；gemnet/gnn 可选模型除外。")
 
 
 if __name__ == "__main__":

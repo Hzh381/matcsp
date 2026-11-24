@@ -138,6 +138,63 @@ def test_gmm():
     print("[smoke] GMM Stage 0–2 math OK")
 
 
+def test_knn_edges():
+    """验证 knn 建图不再依赖 torch_scatter（需要 pymatgen 的 data_utils）。"""
+    try:
+        from matformer_csp.pl_modules.edge_utils import gen_edges
+    except ImportError as e:
+        print(f"[smoke] 跳过 knn 测试（缺少依赖: {e}）")
+        return
+
+    sizes = [4, 5, 6]
+    num_atoms = torch.tensor(sizes)
+    total = sum(sizes)
+    frac_coords = torch.rand(total, 3)
+    node2graph = torch.repeat_interleave(torch.arange(len(sizes)), num_atoms)
+    lattices = torch.eye(3).repeat(len(sizes), 1, 1)
+
+    edge_index, frac_diff = gen_edges(
+        "knn", 5.0, 8, num_atoms, frac_coords, lattices, node2graph
+    )
+    assert edge_index.shape[0] == 2, edge_index.shape
+    assert frac_diff.shape[1] == 3, frac_diff.shape
+    assert edge_index.max() < total
+    print(f"[smoke] knn edges OK  edges={edge_index.shape[1]}")
+
+
+def test_compat_scatter():
+    """验证纯 PyTorch 兼容层与 torch_scatter 的语义一致。"""
+    from matformer_csp.compat import scatter, segment_csr
+
+    src = torch.randn(6, 3)
+    idx = torch.tensor([0, 1, 0, 1, 2, 2])
+    out = scatter(src, idx, dim=0, dim_size=3, reduce="sum")
+    ref = torch.zeros(3, 3)
+    for i in range(6):
+        ref[idx[i]] += src[i]
+    assert torch.allclose(out, ref)
+
+    out_mean = scatter(src, idx, dim=0, dim_size=3, reduce="mean")
+    cnt = torch.bincount(idx, minlength=3).float()
+    assert torch.allclose(out_mean, ref / cnt[:, None])
+
+    src2 = torch.randn(4, 6, 3)
+    idx2 = torch.randint(0, 5, (4, 6))
+    out2 = scatter(src2, idx2, dim=1, dim_size=5)
+    ref2 = torch.zeros(4, 5, 3)
+    for b in range(4):
+        for j in range(6):
+            ref2[b, idx2[b, j]] += src2[b, j]
+    assert torch.allclose(out2, ref2)
+
+    out3 = segment_csr(
+        torch.arange(6).float(), torch.tensor([0, 2, 5, 6])
+    )
+    assert torch.allclose(out3, torch.tensor([1.0, 9.0, 5.0]))
+
+    print("[smoke] compat scatter OK")
+
+
 def test_flow_optional():
     try:
         import hydra  # noqa: F401
@@ -152,5 +209,7 @@ def test_flow_optional():
 if __name__ == "__main__":
     test_matformer_decoder()
     test_gmm()
+    test_compat_scatter()
+    test_knn_edges()
     test_flow_optional()
     print("[smoke] 全部通过")

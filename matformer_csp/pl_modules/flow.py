@@ -404,7 +404,7 @@ class CSPFlow(BaseModule):
                 pred_l = self.latticedecompnn.proj_kdiff_to_spacegroup(pred_l, batch.spacegroup)
             else:
                 raise NotImplementedError("symmetrize is not implemented for lattice matrix.")
-            from torch_scatter import scatter
+            from matformer_csp.compat import scatter
             pred_f_anchor = torch.einsum('bij,bj->bi', batch.ops_inv, pred_f)
             pred_f_anchor = scatter(pred_f_anchor, batch.anchor_index, dim=0, reduce = 'mean')[batch.anchor_index]
             pred_f = torch.einsum('bij,bj->bi', batch.ops[:, :3, :3], pred_f_anchor)

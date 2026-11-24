@@ -11,7 +11,7 @@ import json
 from typing import Any, Dict, Optional, Tuple
 
 import torch
-from torch_scatter import segment_csr
+from matformer_csp.compat import segment_csr
 
 
 def read_json(path: str) -> Dict:

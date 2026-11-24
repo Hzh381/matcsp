@@ -22,7 +22,7 @@ class SymmetrizeRotavg(nn.Module):
         na = scaled_forces.shape[0]
         general_ops = general_ops[:, :, :3, :3].repeat_interleave(num_atoms, dim=0)
         transformed_forces = torch.einsum('nmij,nj->nmi', general_ops, scaled_forces)
-        from torch_scatter import scatter
+        from matformer_csp.compat import scatter
         scaled_symmetrized_forces = scatter(transformed_forces, symm_map, dim=1, dim_size=na)  # (Nat, Nat, 3)
         scaled_symmetrized_forces = scaled_symmetrized_forces.sum(dim=0)  # sum over each target atom index
         scaled_symmetrized_forces /= num_general_ops.repeat_interleave(num_atoms, dim=0)[:, None]
