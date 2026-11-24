@@ -198,7 +198,8 @@ L = cost_lattice ||v_l - (k_T-k_0)||² + cost_coord ||v_f - Δ_F||²
 - 面向 **NVIDIA GPU + CUDA 12.1**；先运行 `nvidia-smi` 确认驱动（Windows 约 >= 527.41）。驱动只支持 CUDA 11.8 时，把下面命令里的 `cu121` 换成 `cu118`。
 - 本机是 Intel Arc 130T，没有 NVIDIA GPU；CUDA 环境只适用于 NVIDIA 机器。CPU 调试只需把 torch 换成 CPU wheel，其余命令相同。
 - **主 CSP 实验不再依赖 `torch_scatter` / `torch_sparse` 等编译扩展**：scatter/segment 已用纯 PyTorch/PyG 实现，不会出现 torch 与扩展 wheel 的 ABI 冲突（`undefined symbol`）。`gemnet`/`gnn` 可选模型仍需要 `torch_sparse`，主实验不需要。
-- 固定版本：Python 3.10、torch 2.5.0+cu121、numpy<2。`constraints.txt` 防止 `lightning/torchdyn` 把 torch 升级。
+- 固定版本：Python 3.10、torch 2.5.0+cu121、numpy<2。`constraints.txt` 防止 `lightning` 把 torch 升级。
+- ODE 采样（`sample_ode.py` / `evaluate_ode.py`）额外需要可选依赖 `torchdyn`：`pip install torchdyn`；默认 Euler 采样不需要。
 
 ### 4.1 方式 A：uv
 
@@ -223,6 +224,9 @@ uv pip install "torch==2.5.0" --index-url https://download.pytorch.org/whl/cu121
 uv pip install -r requirements-csp.txt -c constraints.txt
 ```
 
+> autodl / 国内网络访问 `files.pythonhosted.org` 不稳定时，给最后一条命令加镜像：
+> `uv pip install -r requirements-csp.txt -c constraints.txt --index-url https://pypi.tuna.tsinghua.edu.cn/simple`
+
 ### 4.2 方式 B：conda
 
 ```bash
@@ -236,6 +240,8 @@ conda activate matformer-csp-gpu
 ```bash
 python -m pip install -r requirements-csp.txt -c constraints.txt
 ```
+
+> 国内网络可加镜像：`python -m pip install -r requirements-csp.txt -c constraints.txt -i https://pypi.tuna.tsinghua.edu.cn/simple`
 
 > `--index-url` 只对当前命令生效；`constraints.txt` 锁住 torch 2.5.0，后续安装不会把 torch 升级。
 
