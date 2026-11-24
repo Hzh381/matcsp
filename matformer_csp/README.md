@@ -13,6 +13,7 @@
 ## 1. 目录与文件说明
 
 ```
+data/                          # 完整数据集 CSV（mp_20 / mpts_52 / perov_5 / carbon_24）
 matformer_csp/
 ├── common/                     # 从 CrystalFlow 移植的公共工具
 │   ├── data_utils.py           # CIF 预处理、晶格矩阵/极分解、PBC 建图、scaler
@@ -225,14 +226,16 @@ conda install pytorch-cuda=12.1 -c nvidia
 
 ### 4.3 数据路径
 
+完整数据集已放在仓库的 `data/` 下（`mp_20`、`mpts_52`、`perov_5`、`carbon_24`），默认直接使用，无需设置环境变量。若要改用其他目录：
+
 ```bash
 # Linux/macOS
-export MATFORMER_CSP_DATA_ROOT=/path/to/CrystalFlow/data
+export MATFORMER_CSP_DATA_ROOT=/path/to/data
 # Windows PowerShell
-$env:MATFORMER_CSP_DATA_ROOT="D:/code/workspace_pythoncode/thesisprojector/CrystalFlow/data"
+$env:MATFORMER_CSP_DATA_ROOT="D:/path/to/data"
 ```
 
-默认值为 `<仓库根>/data`。数据目录需要可写（会生成 `*_ori.pt` 缓存和 `*_gmm_resp.pt`）。
+默认值为 `<仓库根>/data`。数据目录需要可写（会生成 `*_ori.pt` 缓存和 `*_gmm_resp.pt`，这些派生文件已在 `.gitignore` 中忽略）。
 
 ---
 
@@ -328,7 +331,7 @@ python matformer_csp/scripts/evaluate.py \
 
 python matformer_csp/scripts/compute_metrics.py \
   --root_path outputs/csp-flow-matformer \
-  --tasks csp --gt_file $MATFORMER_CSP_DATA_ROOT/mp_20/test.csv --label csp
+  --tasks csp --gt_file data/mp_20/test.csv --label csp
 ```
 
 ### 6.2 CSP 评估（多次采样）
@@ -341,7 +344,7 @@ python matformer_csp/scripts/evaluate.py \
 
 python matformer_csp/scripts/compute_metrics.py \
   --root_path outputs/csp-flow-matformer \
-  --tasks csp --gt_file $MATFORMER_CSP_DATA_ROOT/mp_20/test.csv \
+  --tasks csp --gt_file data/mp_20/test.csv \
   --multi_eval --label csp20
 ```
 
@@ -360,7 +363,7 @@ python matformer_csp/scripts/generation.py \
 
 python matformer_csp/scripts/compute_metrics.py \
   --root_path outputs/dng-flow-matformer \
-  --tasks gen --gt_file $MATFORMER_CSP_DATA_ROOT/mp_20/test.csv --label dng
+  --tasks gen --gt_file data/mp_20/test.csv --label dng
 ```
 
 ### 6.5 按化学式采样
@@ -378,8 +381,8 @@ python matformer_csp/scripts/sample.py \
 
 | 数据集 | 状态 | 说明 |
 |---|---|---|
-| `mp_20` / `mpts_52` / `perov_5` / `carbon_24` | CrystalFlow `data/` 已提供 | 设置 `MATFORMER_CSP_DATA_ROOT` 即可 |
-| `mp_20_debug` | 由脚本从 mp_20 截取 | `python matformer_csp/scripts/make_debug_data.py --source $MATFORMER_CSP_DATA_ROOT/mp_20` |
+| `mp_20` / `mpts_52` / `perov_5` / `carbon_24` | **已包含在 `data/`** | 直接可用 |
+| `mp_20_debug` | 由脚本从 mp_20 截取 | `python matformer_csp/scripts/make_debug_data.py --source data/mp_20` |
 | `calypso_60` / `mp_20_chgnet` / `*_sym` / `alex_*` | 需外部提供 | CSV 需包含 `material_id`、`cif`、目标属性列 |
 | GMM 缓存 | 自动生成 | `cache/gmm/<dataset>.pt` 与各 split 的 `*_gmm_resp.pt` |
 
@@ -418,7 +421,7 @@ print(cfg.model._target_, cfg.model.decoder._target_)
 PY
 
 # 3) 生成极小调试数据（16/8/8 条）
-python matformer_csp/scripts/make_debug_data.py --source $MATFORMER_CSP_DATA_ROOT/mp_20
+python matformer_csp/scripts/make_debug_data.py --source data/mp_20
 
 # 4) 原始流 + Matformer 的 fast_dev_run
 python matformer_csp/run.py data=mp_20_debug model=flow_polar_matformer \

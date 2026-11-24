@@ -6,3 +6,7 @@ __pycache__/
 /outputs/
 *.egg-info/
 .hydra/
+
+# 只忽略预处理/模式责任缓存，data/ 下的原始 CSV 正常纳入仓库
+*_ori.pt
+*_gmm_resp.pt
