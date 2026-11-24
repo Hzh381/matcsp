@@ -3,8 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import math
-from torch_scatter import scatter
-from torch_scatter.composite import scatter_softmax
+from matformer_csp.compat import scatter
+from matformer_csp.compat import scatter_softmax
 from torch_geometric.utils import to_dense_adj, dense_to_sparse
 
 from matformer_csp.common.gemnet.gemnet import GemNetT

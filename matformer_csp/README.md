@@ -79,9 +79,9 @@ matformer_csp/
 
 根目录环境文件：
 
-- `environment-cpu.yml` / `environment-gpu.yml`：conda 的 CPU / NVIDIA CUDA 12.1 环境
-- `requirements-csp.txt`：公共 pip 依赖
-- `requirements-pyg-cpu.txt` / `requirements-pyg-gpu.txt`：PyG 扩展（分别匹配 torch 2.5.0 CPU / CUDA 12.1）
+- `environment-gpu.yml`：conda 的 NVIDIA CUDA 12.1 环境
+- `requirements-csp.txt`：公共 pip 依赖（不含编译型 PyG 扩展）
+- `constraints.txt`：固定 torch 2.5.0 / numpy<2
 - `.gitignore`
 
 ---
@@ -191,95 +191,69 @@ L = cost_lattice ||v_l - (k_T-k_0)||² + cost_coord ||v_f - Δ_F||²
 
 ---
 
-## 4. 环境安装（CPU / GPU，uv 与 conda 两套）
+## 4. 环境安装（NVIDIA GPU，uv 或 conda）
 
-### 4.0 硬件与版本矩阵
+### 4.0 说明
 
-- 当前这台机器是 **Intel Arc 130T**，没有 NVIDIA GPU；CUDA 仅适用于 NVIDIA。本机建议用 CPU 环境做 smoke/debug，正式训练放到 NVIDIA 服务器/云。
-- NVIDIA 用户先运行 `nvidia-smi` 确认驱动与 CUDA 版本；cu121 需要驱动约 >= 527.41（Windows）。
-- macOS 使用 CPU 方案；MPS 未验证，PyG 扩展可能没有 macOS wheel。
-- `environment-gpu.yml` / `requirements-pyg-gpu.txt` 面向 **NVIDIA CUDA 12.1**；需要驱动支持。若驱动只支持 CUDA 11.8，把 `cu121` 换成 `cu118`，并同步改 `requirements-pyg-gpu.txt` 的 URL（`torch-2.5.0+cu118.html`）。
-- Intel Arc 可用 IPEX/XPU 尝试，但 PyG 扩展只提供 CPU/CUDA 版，本项目不建议；用 CPU 或 NVIDIA。
-- 推荐版本矩阵：
-
-| 组件 | CPU | GPU |
-|---|---|---|
-| Python | 3.10 | 3.10 |
-| torch | 2.5.0+cpu | 2.5.0+cu121 |
-| PyG 扩展 | torch-2.5.0+cpu | torch-2.5.0+cu121 |
-| numpy | >=1.26,<2 | >=1.26,<2 |
-| CUDA 驱动 | - | NVIDIA >= 527.41 (Windows) |
+- 面向 **NVIDIA GPU + CUDA 12.1**；先运行 `nvidia-smi` 确认驱动（Windows 约 >= 527.41）。驱动只支持 CUDA 11.8 时，把下面命令里的 `cu121` 换成 `cu118`。
+- 本机是 Intel Arc 130T，没有 NVIDIA GPU；CUDA 环境只适用于 NVIDIA 机器。CPU 调试只需把 torch 换成 CPU wheel，其余命令相同。
+- **主 CSP 实验不再依赖 `torch_scatter` / `torch_sparse` 等编译扩展**：scatter/segment 已用纯 PyTorch/PyG 实现，不会出现 torch 与扩展 wheel 的 ABI 冲突（`undefined symbol`）。`gemnet`/`gnn` 可选模型仍需要 `torch_sparse`，主实验不需要。
+- 固定版本：Python 3.10、torch 2.5.0+cu121、numpy<2。`constraints.txt` 防止 `lightning/torchdyn` 把 torch 升级。
 
 ### 4.1 方式 A：uv
 
-安装 uv（任选其一）：
-
 ```bash
 pip install uv
-# 或 Windows PowerShell:
-# irm https://astral.sh/uv/install.ps1 | iex
 ```
-
-#### CPU
 
 ```bash
-uv venv --python 3.10 .venv-cpu
-# Windows: .venv-cpu\Scripts\activate
-source .venv-cpu/bin/activate
-
-uv pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.5.0"
-uv pip install -r requirements-csp.txt
-uv pip install -r requirements-pyg-cpu.txt
+uv venv --python 3.10 .venv
 ```
-
-#### GPU（NVIDIA CUDA 12.1）
 
 ```bash
-uv venv --python 3.10 .venv-gpu
-# Windows: .venv-gpu\Scripts\activate
-source .venv-gpu/bin/activate
-
-uv pip install --index-url https://download.pytorch.org/whl/cu121 "torch==2.5.0"
-uv pip install -r requirements-csp.txt
-uv pip install -r requirements-pyg-gpu.txt
+# Windows: .venv\Scripts\activate
+source .venv/bin/activate
 ```
 
-> `--index-url` 只作用于当前这条命令，不会影响后续 `uv pip install`。
-> PyG 扩展的 `--find-links` 必须与 torch 版本、CUDA 版本完全一致；换 torch 版本时同步改 `requirements-pyg-*.txt`。
-> 如果 uv 版本较老不支持 requirements 文件里的 `--find-links`，可直接执行：
-> `uv pip install torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.5.0+cpu.html`（GPU 把 `+cpu` 换成 `+cu121`）。
+```bash
+uv pip install "torch==2.5.0" --index-url https://download.pytorch.org/whl/cu121
+```
+
+```bash
+uv pip install -r requirements-csp.txt -c constraints.txt
+```
 
 ### 4.2 方式 B：conda
 
-conda 只负责 Python + PyTorch，其余依赖用 pip 安装，避免 conda/pip 混装冲突。
-
-#### CPU
-
-```bash
-conda env create -f environment-cpu.yml
-conda activate matformer-csp-cpu
-python -m pip install -r requirements-csp.txt
-python -m pip install -r requirements-pyg-cpu.txt
-```
-
-#### GPU（NVIDIA CUDA 12.1）
-
 ```bash
 conda env create -f environment-gpu.yml
-conda activate matformer-csp-gpu
-python -m pip install -r requirements-csp.txt
-python -m pip install -r requirements-pyg-gpu.txt
 ```
+
+```bash
+conda activate matformer-csp-gpu
+```
+
+```bash
+python -m pip install -r requirements-csp.txt -c constraints.txt
+```
+
+> `--index-url` 只对当前命令生效；`constraints.txt` 锁住 torch 2.5.0，后续安装不会把 torch 升级。
 
 ### 4.3 环境自检
 
 ```bash
 python matformer_csp/scripts/check_env.py
+```
+
+```bash
 python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+```
+
+```bash
 pip check
 ```
 
-`check_env.py` 会打印 torch/CUDA/PyG 扩展版本，并实际调用一次 `torch_scatter`；如果出现 `DLL load failed`，说明 torch 与 PyG 扩展版本不匹配。
+`check_env.py` 会验证 PyG 的纯 PyTorch scatter 路径，不再检查/依赖 `torch_scatter`。
 
 ### 4.4 数据路径
 
@@ -293,8 +267,6 @@ $env:MATFORMER_CSP_DATA_ROOT="D:/path/to/data"
 ```
 
 默认值为 `<仓库根>/data`。数据目录需要可写（会生成 `*_ori.pt` 缓存和 `*_gmm_resp.pt`，这些派生文件已在 `.gitignore` 中忽略）。
-
----
 
 ## 5. 训练命令
 
@@ -485,7 +457,6 @@ python matformer_csp/scripts/make_debug_data.py --source data/mp_20
 
 # 4) 原始流 + Matformer 的 fast_dev_run
 python matformer_csp/run.py data=mp_20_debug model=flow_polar_matformer \
-  model.decoder.edge_style=fc \
   train.pl_trainer.fast_dev_run=true train.pl_trainer.accelerator=cpu \
   expname=debug-flow hydra.run.dir=outputs/debug-flow
 
@@ -497,13 +468,12 @@ python matformer_csp/gmm/fit_priors.py data=mp_20_debug \
 
 # 6) GMM 流 + Matformer 的 fast_dev_run
 python matformer_csp/run.py data=mp_20_debug model=flow_gmm_matformer \
-  model.decoder.edge_style=fc \
   model.gmm_prior_path=cache/gmm/mp_20_debug.pt \
   train.pl_trainer.fast_dev_run=true train.pl_trainer.accelerator=cpu \
   expname=debug-gmm hydra.run.dir=outputs/debug-gmm
 ```
 
-> `edge_style=fc` 只用于最小依赖验证；正式训练用默认 `knn`（需要安装匹配版本的 `torch_scatter`）。
+> `edge_style=fc` 只是另一种建图方式；默认 `knn` 现在也不需要 `torch_scatter`。
 
 完整训练前的建议顺序：
 1. 安装环境（第 4 节）。

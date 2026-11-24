@@ -12,8 +12,8 @@ from typing import Any, Dict
 import hydra
 import omegaconf
 import lightning as pl
-from torch_scatter import scatter
-from torch_scatter.composite import scatter_softmax
+from matformer_csp.compat import scatter
+from matformer_csp.compat import scatter_softmax
 from torch_geometric.utils import to_dense_adj, dense_to_sparse
 from tqdm import tqdm
 

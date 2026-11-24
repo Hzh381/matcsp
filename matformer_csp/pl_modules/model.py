@@ -7,7 +7,7 @@ import torch
 import lightning as pl
 import torch.nn as nn
 from torch.nn import functional as F
-from torch_scatter import scatter
+from matformer_csp.compat import scatter
 from tqdm import tqdm
 
 from matformer_csp.common.utils import PROJECT_ROOT

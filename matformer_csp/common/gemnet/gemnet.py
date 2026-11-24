@@ -14,8 +14,11 @@ from pathlib import Path
 # import numpy as np
 import torch
 import torch.nn as nn
-from torch_scatter import scatter
-from torch_sparse import SparseTensor
+from matformer_csp.compat import scatter
+try:
+    from torch_sparse import SparseTensor
+except ImportError:  # 可选依赖；主 CSP 实验不需要
+    SparseTensor = None
 
 from .layers.atom_update_block import OutputBlock
 from .layers.base_layers import Dense
@@ -397,6 +400,8 @@ class GemNetT(torch.nn.Module):
 
         value = torch.arange(idx_s.size(0), device=idx_s.device, dtype=idx_s.dtype)
         # Possibly contains multiple copies of the same edge (for periodic interactions)
+        if SparseTensor is None:
+            raise ImportError("gemnet 需要 torch_sparse；主 CSP 实验（cspnet/matformer）不需要")
         adj = SparseTensor(
             row=idx_t,
             col=idx_s,

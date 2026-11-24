@@ -1,5 +1,5 @@
 import torch
-from torch_scatter import scatter_add
+from matformer_csp.compat import scatter_add
 
 
 def edge_score_to_lattice_score_frac_symmetric(

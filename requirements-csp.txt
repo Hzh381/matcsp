@@ -1,9 +1,9 @@
-# Matformer-CSP 公共依赖（torch 与 PyG 扩展单独安装）
+# Matformer-CSP 公共 GPU 依赖（主 CSP 实验不需要 torch_scatter/torch_sparse 等编译扩展）
 #
-# CPU: requirements-pyg-cpu.txt
-# GPU: requirements-pyg-gpu.txt
+# 先安装 torch，再执行：
+#   python -m pip install -r requirements-csp.txt -c constraints.txt
 #
-# numpy 固定在 2.0 以下，避免与旧版 scikit-learn / numba / matminer 冲突。
+# numpy 固定在 2.0 以下，避免与 scikit-learn / numba / matminer 冲突。
 
 torch_geometric>=2.4,<3
 lightning>=2.0,<3

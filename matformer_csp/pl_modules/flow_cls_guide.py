@@ -17,8 +17,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch_geometric.utils import dense_to_sparse, to_dense_adj
-from torch_scatter import scatter
-from torch_scatter.composite import scatter_softmax
+from matformer_csp.compat import scatter
+from matformer_csp.compat import scatter_softmax
 from tqdm import tqdm
 
 import hydra

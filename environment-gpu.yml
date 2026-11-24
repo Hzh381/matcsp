@@ -5,8 +5,7 @@
 # 用法：
 #   conda env create -f environment-gpu.yml
 #   conda activate matformer-csp-gpu
-#   python -m pip install -r requirements-csp.txt
-#   python -m pip install -r requirements-pyg-gpu.txt
+#   python -m pip install -r requirements-csp.txt -c constraints.txt
 
 name: matformer-csp-gpu
 channels:

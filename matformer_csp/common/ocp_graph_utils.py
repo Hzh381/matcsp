@@ -11,7 +11,7 @@ from functools import lru_cache
 
 import numpy as np
 import torch
-from torch_scatter import segment_coo, segment_csr
+from matformer_csp.compat import segment_coo, segment_csr
 
 
 @lru_cache

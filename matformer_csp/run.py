@@ -277,6 +277,8 @@ def run(cfg: DictConfig) -> None:
     model = get_model(cfg.model, cfg.optim, cfg.data, cfg.logging)
     pass_scaler_to_model(model, datamodule)
     save_scaler(datamodule, run_dir)
+    # DDP 子进程会各自 setup；先在主进程建好 val 缓存，避免两个 rank 重复预处理
+    datamodule.setup("fit")
 
     # Logger instantiation/configuration
     wandb_logger = get_wandb_logger(cfg, run_dir)
@@ -362,6 +364,8 @@ def finetune(cfg):
     model = get_model(cfg.model, cfg.optim, cfg.data, cfg.logging, ckpt=ckpt)
     pass_scaler_to_model(model, datamodule)
     save_scaler(datamodule, run_dir)
+    # DDP 子进程会各自 setup；先在主进程建好 val 缓存，避免两个 rank 重复预处理
+    datamodule.setup("fit")
 
     ft_schedule = find_finetune_schedule(cfg, run_dir, model)
 
