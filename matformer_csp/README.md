@@ -81,6 +81,7 @@ matformer_csp/
 
 - `environment-cpu.yml` / `environment-gpu.yml`：conda 的 CPU / NVIDIA CUDA 12.1 环境
 - `requirements-csp.txt`：公共 pip 依赖
+- `constraints.txt`：固定 torch 2.5.0 / numpy<2，防止依赖升级破坏 PyG ABI
 - `requirements-pyg-cpu.txt` / `requirements-pyg-gpu.txt`：PyG 扩展（分别匹配 torch 2.5.0 CPU / CUDA 12.1）
 - `.gitignore`
 
@@ -196,6 +197,7 @@ L = cost_lattice ||v_l - (k_T-k_0)||² + cost_coord ||v_f - Δ_F||²
 ### 4.0 硬件与版本矩阵
 
 - 当前这台机器是 **Intel Arc 130T**，没有 NVIDIA GPU；CUDA 仅适用于 NVIDIA。本机建议用 CPU 环境做 smoke/debug，正式训练放到 NVIDIA 服务器/云。
+- **安装顺序必须是：torch → requirements（带 `-c constraints.txt`）→ PyG 扩展**。否则 lightning/torchdyn 可能把 torch 升级，导致 PyG 扩展的 `_version_cuda.so` 出现 `undefined symbol`。
 - NVIDIA 用户先运行 `nvidia-smi` 确认驱动与 CUDA 版本；cu121 需要驱动约 >= 527.41（Windows）。
 - macOS 使用 CPU 方案；MPS 未验证，PyG 扩展可能没有 macOS wheel。
 - `environment-gpu.yml` / `requirements-pyg-gpu.txt` 面向 **NVIDIA CUDA 12.1**；需要驱动支持。若驱动只支持 CUDA 11.8，把 `cu121` 换成 `cu118`，并同步改 `requirements-pyg-gpu.txt` 的 URL（`torch-2.5.0+cu118.html`）。
@@ -228,8 +230,8 @@ uv venv --python 3.10 .venv-cpu
 source .venv-cpu/bin/activate
 
 uv pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.5.0"
-uv pip install -r requirements-csp.txt
-uv pip install -r requirements-pyg-cpu.txt
+uv pip install -r requirements-csp.txt -c constraints.txt
+uv pip install -r requirements-pyg-cpu.txt -c constraints.txt
 ```
 
 #### GPU（NVIDIA CUDA 12.1）
@@ -240,8 +242,8 @@ uv venv --python 3.10 .venv-gpu
 source .venv-gpu/bin/activate
 
 uv pip install --index-url https://download.pytorch.org/whl/cu121 "torch==2.5.0"
-uv pip install -r requirements-csp.txt
-uv pip install -r requirements-pyg-gpu.txt
+uv pip install -r requirements-csp.txt -c constraints.txt
+uv pip install -r requirements-pyg-gpu.txt -c constraints.txt
 ```
 
 > `--index-url` 只作用于当前这条命令，不会影响后续 `uv pip install`。
@@ -258,8 +260,8 @@ conda 只负责 Python + PyTorch，其余依赖用 pip 安装，避免 conda/pip
 ```bash
 conda env create -f environment-cpu.yml
 conda activate matformer-csp-cpu
-python -m pip install -r requirements-csp.txt
-python -m pip install -r requirements-pyg-cpu.txt
+python -m pip install -r requirements-csp.txt -c constraints.txt
+python -m pip install -r requirements-pyg-cpu.txt -c constraints.txt
 ```
 
 #### GPU（NVIDIA CUDA 12.1）
@@ -267,8 +269,8 @@ python -m pip install -r requirements-pyg-cpu.txt
 ```bash
 conda env create -f environment-gpu.yml
 conda activate matformer-csp-gpu
-python -m pip install -r requirements-csp.txt
-python -m pip install -r requirements-pyg-gpu.txt
+python -m pip install -r requirements-csp.txt -c constraints.txt
+python -m pip install -r requirements-pyg-gpu.txt -c constraints.txt
 ```
 
 ### 4.3 环境自检

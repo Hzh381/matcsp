@@ -1,0 +1,9 @@
+# 约束文件：防止 lightning / torchdyn 等依赖把 torch 升级到
+# 与已安装 PyG 扩展不匹配的版本。
+#
+# 安装公共依赖和 PyG 扩展时都要带 -c constraints.txt：
+#   uv pip install -r requirements-csp.txt -c constraints.txt
+#   python -m pip install -r requirements-csp.txt -c constraints.txt
+
+torch==2.5.0
+numpy>=1.26,<2
