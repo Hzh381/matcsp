@@ -184,6 +184,9 @@ def smact_validity(comp, count,
     elem_symbols = tuple([chemical_symbols[elem] for elem in comp])
     space = smact.element_dictionary(elem_symbols)
     smact_elems = [e[1] for e in space.items()]
+    # 新版 smact 对少数元素（如 Pm）拿不到氧化态/电负性，直接判为无效组成
+    if any(not e.oxidation_states or e.pauling_eneg is None for e in smact_elems):
+        return False
     electronegs = [e.pauling_eneg for e in smact_elems]
     ox_combos = [e.oxidation_states for e in smact_elems]
     if len(set(elem_symbols)) == 1:

@@ -1,5 +1,6 @@
 import sys
 sys.path.append('.')
+import re
 import textwrap
 from pathlib import Path
 from typing import List
@@ -192,14 +193,22 @@ def save_scaler(datamodule, save_dir):
     torch.save(datamodule.scalers, save_dir / 'prop_scalers.pt')
 
 
-
 def find_ckpt(ckpt_dir) -> str | None:
+    """查找目录中格式为 epoch=N-step=M.ckpt 的 checkpoint，返回 epoch 最大的那个。
+
+    纯名字匹配 last.ckpt / 自定义 ckpt 都不参与排序，留着文件也不会报错。
+    """
     ckpts = list(ckpt_dir.glob('*.ckpt'))
-    if len(ckpts) > 0:
-        ckpt_epochs = np.array([int(ckpt.parts[-1].split('-')[0].split('=')[1]) for ckpt in ckpts])
-        ckpt = str(ckpts[ckpt_epochs.argsort()[-1]])
+    epoch_pat = re.compile(r'^epoch=(\d+)-step=\d+\.ckpt$')
+    ranked = []
+    for ckpt in ckpts:
+        m = epoch_pat.match(ckpt.parts[-1])
+        if m is not None:
+            ranked.append((int(m.group(1)), ckpt))
+    if ranked:
+        ranked.sort()
+        ckpt = str(ranked[-1][1])
         hydra.utils.log.info(f"found checkpoint: {ckpt}")
-        # ckpt = Path(ckpt)
     else:
         ckpt = None
     return ckpt

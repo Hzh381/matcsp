@@ -1,9 +1,12 @@
 # Stage 3–4：GMM 先验 + 模式耦合流匹配（CSP 版本）。
 # 通过覆写 CSPFlow 的两个钩子实现，不重写原 flow 的训练/采样逻辑。
 
+import os
+from pathlib import Path
+
 import torch
 
-from matformer_csp.common.utils import torch_load
+from matformer_csp.common.utils import PROJECT_ROOT, torch_load
 from matformer_csp.gmm.lattice_gmm import LatticeGMM
 from matformer_csp.gmm.padding import wrap
 from matformer_csp.gmm.symmetry import sample_permutation
@@ -19,15 +22,24 @@ class GMMPriorMixin:
     """给 flow 类提供 GMM 先验采样与置换/平移变换。"""
 
     def _init_gmm(self, gmm_prior_path):
-        # 兼容从完整 hparams.yaml 恢复时路径位于 self.hparams.model 的情况
-        if gmm_prior_path is None and hasattr(self.hparams, "model"):
-            model_cfg = self.hparams.model
-            if hasattr(model_cfg, "get"):
-                gmm_prior_path = model_cfg.get("gmm_prior_path", None)
+        # 兼容从 checkpoint / hparams.yaml 恢复时的两种结构：
+        # 1) 训练时 hydra 直接把 model 配置展开为 kwargs，gmm_prior_path 为顶层键；
+        # 2) hparams.yaml 把模型配置嵌在 model 子节点下。
+        if gmm_prior_path is None and hasattr(self, "hparams"):
+            if "gmm_prior_path" in self.hparams:
+                gmm_prior_path = self.hparams["gmm_prior_path"]
+            elif hasattr(self.hparams, "model"):
+                model_cfg = self.hparams.model
+                if hasattr(model_cfg, "get"):
+                    gmm_prior_path = model_cfg.get("gmm_prior_path", None)
         if gmm_prior_path is None:
             raise ValueError("GMM 流需要 model.gmm_prior_path 指向 fit_priors.py 的输出")
         if not self.lattice_polar:
             raise ValueError("GMM 流要求 lattice_polar=true（晶格 GMM 是 6D 极分解）")
+
+        # 相对路径优先按当前工作目录解析，失败则回退到仓库根目录
+        if not os.path.isabs(gmm_prior_path) and not Path(gmm_prior_path).exists():
+            gmm_prior_path = str(Path(PROJECT_ROOT) / gmm_prior_path)
 
         prior = _load_prior(gmm_prior_path)
         self.gmm_weights = prior["weights"].float()

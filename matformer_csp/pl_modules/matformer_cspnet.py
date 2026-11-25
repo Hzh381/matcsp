@@ -1,6 +1,8 @@
 # Matformer 解码器：接口与 CSPNet 对齐，内部用 MatformerConv 做消息传递。
 # 这样所有 CrystalFlow 的 flow / diffusion / energy 实验只需把 decoder 换成 matformer 即可。
 
+import math
+
 import torch
 import torch.nn as nn
 from torch_geometric.utils import scatter
@@ -74,11 +76,23 @@ class MatformerCSPNet(nn.Module):
             self.node_embedding = nn.Linear(type_encoding.out_dim, hidden_dim)
         self.atom_latent_emb = nn.Linear(hidden_dim + latent_dim, hidden_dim)
 
-        # 边编码：笛卡尔键长 RBF 展开后映射到 hidden_dim
+        # 边编码：笛卡尔键长 RBF 展开 + 周期相对分数坐标的正弦嵌入。
+        # 后者是必要的：CSPNet 通过 frac_diff 把原子间相对位置送入消息传递，
+        # 如果只保留键长，坐标速度场无法从输入中区分原子位置，coord loss 会卡在零预测基线。
         self.rbf = RBFExpansion(vmin=0.0, vmax=8.0, bins=edge_rbf_bins)
         self.edge_mlp = nn.Sequential(
             nn.Linear(edge_rbf_bins, hidden_dim),
             nn.Softplus(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+        self.edge_pos_freqs = 4
+        self.register_buffer(
+            "edge_pos_freq",
+            2 * math.pi * torch.arange(1, self.edge_pos_freqs + 1).float(),
+        )
+        self.edge_pos_emb = nn.Sequential(
+            nn.Linear(2 * self.edge_pos_freqs * 3, hidden_dim),
+            nn.SiLU(),
             nn.Linear(hidden_dim, hidden_dim),
         )
 
@@ -152,9 +166,12 @@ class MatformerCSPNet(nn.Module):
         )
         edge2graph = node2graph[edges[0]]
 
-        # 2. 分数坐标差 -> 笛卡尔位移 -> 键长 RBF
+        # 2. 分数坐标差 -> 笛卡尔位移 -> 键长 RBF；并叠加周期相对位置的正弦嵌入
         cart_diff = torch.einsum("ei,eij->ej", frac_diff, lattices_mat[edge2graph])
-        edge_attr = self.edge_mlp(self.rbf(torch.norm(cart_diff, dim=-1)))
+        phase = frac_diff.unsqueeze(-1) * self.edge_pos_freq  # (E, 3, F)
+        phase = phase.reshape(frac_diff.size(0), -1)
+        pos_emb = torch.cat([torch.sin(phase), torch.cos(phase)], dim=-1)
+        edge_attr = self.edge_mlp(self.rbf(torch.norm(cart_diff, dim=-1))) + self.edge_pos_emb(pos_emb)
 
         # 3. 节点初始特征 = 原子类型 embedding + 时间嵌入
         if self.type_encoding is None and not self.smooth:
